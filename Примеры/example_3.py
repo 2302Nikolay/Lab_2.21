@@ -9,13 +9,14 @@ def sql_insert(con, entities):
         """
         INSERT INTO employees(id, name, salary, departament, position, hireDate)
         VALUES(?, ?, ?, ?, ?, ?)
-        """, entities
+        """,
+        entities,
     )
     con.commit()
 
 
 if __name__ == "__main__":
-    con = sqlite3.connect('mydatabase.db')
-    entities = (2, 'Andrew', 800, 'IT', 'Tech', '2018-02-06')
+    con = sqlite3.connect("mydatabase.db")
+    entities = (2, "Andrew", 800, "IT", "Tech", "2018-02-06")
     sql_insert(con, entities)
     con.close()

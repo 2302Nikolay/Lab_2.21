@@ -4,7 +4,7 @@ import sqlite3
 import datetime
 
 if __name__ == "__main__":
-    con = sqlite3.connect('mydatabase.db')
+    con = sqlite3.connect("mydatabase.db")
     cursor_obj = con.cursor()
     cursor_obj.execute(
         """
@@ -15,7 +15,7 @@ if __name__ == "__main__":
     )
     data = [
         (1, "Ridesharing", datetime.date(2017, 1, 2)),
-        (2, "Water Purifying", datetime.date(2018, 3, 4))
+        (2, "Water Purifying", datetime.date(2018, 3, 4)),
     ]
     cursor_obj.executemany("INSERT INTO assignments VALUES(?, ?, ?)", data)
     con.commit()

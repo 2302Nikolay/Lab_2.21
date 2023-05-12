@@ -13,19 +13,11 @@ def display_workers(staff: t.List[t.Dict[str, t.Any]]) -> None:
     # Проверить, что список работников не пуст.
     if staff:
         # Заголовок таблицы.
-        line = '+-{}-+-{}-+-{}-+-{}-+'.format(
-            '-' * 4,
-            '-' * 30,
-            '-' * 20,
-            '-' * 8
-        )
+        line = "+-{}-+-{}-+-{}-+-{}-+".format("-" * 4, "-" * 30, "-" * 20, "-" * 8)
         print(line)
         print(
-            '| {:^4} | {:^30} | {:^20} | {:^8} |'.format(
-                "№",
-                "Ф.И.О.",
-                "Должность",
-                "Год"
+            "| {:^4} | {:^30} | {:^20} | {:^8} |".format(
+                "№", "Ф.И.О.", "Должность", "Год"
             )
         )
         print(line)
@@ -33,11 +25,11 @@ def display_workers(staff: t.List[t.Dict[str, t.Any]]) -> None:
         # Вывести данные о всех сотрудниках
         for idx, worker in enumerate(staff, 1):
             print(
-                '| {:>4} | {:<30} | {:<20} | {:>8} |'.format(
+                "| {:>4} | {:<30} | {:<20} | {:>8} |".format(
                     idx,
-                    worker.get('name', ''),
-                    worker.get('post', ''),
-                    worker.get('year', 0)
+                    worker.get("name", ""),
+                    worker.get("post", ""),
+                    worker.get("year", 0),
                 )
             )
             print(line)
@@ -77,12 +69,7 @@ def create_db(database_path: Path) -> None:
     conn.close()
 
 
-def add_worker(
-    database_path: Path,
-    name: str,
-    post: str,
-    year: int
-) -> None:
+def add_worker(database_path: Path, name: str, post: str, year: int) -> None:
     """
     Добавить работника в базу данных
     """
@@ -95,7 +82,7 @@ def add_worker(
         """
         SELECT post_id FROM posts WHERE post_title = ?
         """,
-        (post,)
+        (post,),
     )
     row = cursor.fetchone()
     if row is None:
@@ -103,7 +90,7 @@ def add_worker(
             """
             INSERT INTO posts (post_title) VALUES (?)
             """,
-            (post,)
+            (post,),
         )
         post_id = cursor.lastrowid
 
@@ -116,7 +103,7 @@ def add_worker(
         INSERT INTO workers (worker_name, post_id, worker_year)
         VALUES (?, ?, ?)
         """,
-        (name, post_id, year)
+        (name, post_id, year),
     )
     conn.commit()
     conn.close()
@@ -149,9 +136,7 @@ def select_all(database_path: Path) -> t.List[t.Dict[str, t.Any]]:
     ]
 
 
-def select_by_period(
-    database_path: Path, period: int
-) -> t.List[t.Dict[str, t.Any]]:
+def select_by_period(database_path: Path, period: int) -> t.List[t.Dict[str, t.Any]]:
     """
     Выбрать всех работников с периодом работы больше заданного.
     """
@@ -165,7 +150,7 @@ def select_by_period(
         INNER JOIN posts ON posts.post_id = workers.post_id
         WHERE (strftime('%Y', date('now')) - workers.worker_year) >= ?
         """,
-        (period,)
+        (period,),
     )
     rows = cursor.fetchall()
     conn.close()
@@ -187,58 +172,37 @@ def main(command_line=None):
         action="store",
         required=False,
         default=str(Path.home() / "workers.db"),
-        help="The database file name"
+        help="The database file name",
     )
 
     # Создать основной парсер командной строки.
     parser = argparse.ArgumentParser("workers")
-    parser.add_argument(
-        "--version",
-        action="version",
-        version="%(prog)s 0.1.0"
-    )
+    parser.add_argument("--version", action="version", version="%(prog)s 0.1.0")
     subparsers = parser.add_subparsers(dest="command")
 
     # Создать субпарсер для добавления работника.
-    add = subparsers.add_parser(
-        "add",
-        parents=[file_parser],
-        help="Add a new worker"
-    )
+    add = subparsers.add_parser("add", parents=[file_parser], help="Add a new worker")
     add.add_argument(
-        "-n",
-        "--name",
-        action="store",
-        required=True,
-        help="The worker's name"
+        "-n", "--name", action="store", required=True, help="The worker's name"
     )
-    add.add_argument(
-        "-p",
-        "--post",
-        action="store",
-        help="The worker's post"
-    )
+    add.add_argument("-p", "--post", action="store", help="The worker's post")
     add.add_argument(
         "-y",
         "--year",
         action="store",
         type=int,
         required=True,
-        help="The year of hiring"
+        help="The year of hiring",
     )
 
     # Создать субпарсер для отображения всех работников.
     _ = subparsers.add_parser(
-        "display",
-        parents=[file_parser],
-        help="Display all workers"
+        "display", parents=[file_parser], help="Display all workers"
     )
 
     # Создать субпарсер для выбора работников.
     select = subparsers.add_parser(
-        "select",
-        parents=[file_parser],
-        help="Select the workers"
+        "select", parents=[file_parser], help="Select the workers"
     )
     select.add_argument(
         "-P",
@@ -246,7 +210,7 @@ def main(command_line=None):
         action="store",
         type=int,
         required=True,
-        help="The required period"
+        help="The required period",
     )
 
     # Выполнить разбор аргументов командной строки.

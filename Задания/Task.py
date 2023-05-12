@@ -17,7 +17,7 @@ def create_db(database_path: Path) -> None:
     cursor.execute(
         """
         CREATE TABLE IF NOT EXISTS birth (
-            date_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            number INTEGER PRIMARY KEY AUTOINCREMENT,
             birth_date INTEGER NOT NULL
         )
         """
@@ -30,8 +30,8 @@ def create_db(database_path: Path) -> None:
             user_id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_name TEXT NOT NULL,
             user_number TEXT NOT NULL,
-            date_id INTEGER NOT NULL,
-            FOREIGN KEY(date_id) REFERENCES birth(date_id)
+            number INTEGER NOT NULL,
+            FOREIGN KEY(number) REFERENCES birth(number)
         )
         """
     )
@@ -45,19 +45,11 @@ def display_workers(staff: t.List[t.Dict[str, t.Any]]) -> None:
     # Проверить, что список работников не пуст.
     if staff:
         # Заголовок таблицы.
-        line = '+-{}-+-{}-+-{}-+-{}-+'.format(
-            '-' * 4,
-            '-' * 30,
-            '-' * 20,
-            '-' * 20
-        )
+        line = "+-{}-+-{}-+-{}-+-{}-+".format("-" * 4, "-" * 30, "-" * 20, "-" * 20)
         print(line)
         print(
-            '| {:^4} | {:^30} | {:^20} | {:^20} |'.format(
-                "№",
-                "Имя",
-                "Номер телефона",
-                "Дата рождения"
+            "| {:^4} | {:^30} | {:^20} | {:^20} |".format(
+                "№", "Имя", "Номер телефона", "Дата рождения"
             )
         )
         print(line)
@@ -65,11 +57,11 @@ def display_workers(staff: t.List[t.Dict[str, t.Any]]) -> None:
         # Вывести данные о всех сотрудниках
         for idx, user in enumerate(staff, 1):
             print(
-                '| {:>4} | {:<30} | {:<20} | {:>20} |'.format(
+                "| {:>4} | {:<30} | {:<20} | {:>20} |".format(
                     idx,
-                    user.get('name', ''),
-                    user.get('number', ''),
-                    user.get('year', 0)
+                    user.get("name", ""),
+                    user.get("number", ""),
+                    user.get("year", 0),
                 )
             )
             print(line)
@@ -77,12 +69,7 @@ def display_workers(staff: t.List[t.Dict[str, t.Any]]) -> None:
         print("Список работников пуст.")
 
 
-def add_worker(
-    database_path: Path,
-    name: str,
-    number: str,
-    date: int
-) -> None:
+def add_worker(database_path: Path, name: str, number: str, date: int) -> None:
     """
     Добавить работника в базу данных
     """
@@ -93,9 +80,9 @@ def add_worker(
     # Если такой записи нет, то добавить информацию о новой должности
     cursor.execute(
         """
-        SELECT date_id FROM birth WHERE birth_date = ?
+        SELECT number FROM birth WHERE birth_date = ?
         """,
-        (date,)
+        (date,),
     )
     row = cursor.fetchone()
     if row is None:
@@ -103,20 +90,20 @@ def add_worker(
             """
             INSERT INTO birth (birth_date) VALUES (?)
             """,
-            (date,)
+            (date,),
         )
-        date_id = cursor.lastrowid
+        number = cursor.lastrowid
 
     else:
-        date_id = row[0]
+        number = row[0]
 
     # Добавить информацию о новом работнике
     cursor.execute(
         """
-        INSERT INTO users (user_name, date_id, user_number)
+        INSERT INTO users (user_name, number, user_number)
         VALUES (?, ?, ?)
         """,
-        (name, date_id, number)
+        (name, number, number),
     )
     conn.commit()
     conn.close()
@@ -133,7 +120,7 @@ def select_all(database_path: Path) -> t.List[t.Dict[str, t.Any]]:
         """
         SELECT users.user_name, birth.birth_date, users.user_number
         FROM users
-        INNER JOIN birth ON birth.date_id = users.date_id
+        INNER JOIN birth ON birth.number = users.number
         """
     )
     rows = cursor.fetchall()
@@ -149,9 +136,7 @@ def select_all(database_path: Path) -> t.List[t.Dict[str, t.Any]]:
     ]
 
 
-def select_by_period(
-    database_path: Path, pnumber: int
-) -> t.List[t.Dict[str, t.Any]]:
+def select_by_period(database_path: Path, pnumber: int) -> t.List[t.Dict[str, t.Any]]:
     """
     Выбрать всех пользователей с заданным номером телефона.
     """
@@ -162,10 +147,10 @@ def select_by_period(
         """
         SELECT users.user_name, birth.birth_date, users.user_number
         FROM users
-        INNER JOIN birth ON birth.date_id = users.date_id
+        INNER JOIN birth ON birth.number = users.number
         WHERE users.user_number == ?
         """,
-        (pnumber,)
+        (pnumber,),
     )
     rows = cursor.fetchall()
     conn.close()
@@ -187,58 +172,32 @@ def main(command_line=None):
         action="store",
         required=False,
         default=str(Path.home() / "users.db"),
-        help="The database file name"
+        help="The database file name",
     )
 
     # Создать основной парсер командной строки.
     parser = argparse.ArgumentParser("workers")
-    parser.add_argument(
-        "--version",
-        action="version",
-        version="%(prog)s 0.1.0"
-    )
+    parser.add_argument("--version", action="version", version="%(prog)s 0.1.0")
     subparsers = parser.add_subparsers(dest="command")
 
     # Создать субпарсер для добавления пользователей.
-    add = subparsers.add_parser(
-        "add",
-        parents=[file_parser],
-        help="Add a new worker"
-    )
+    add = subparsers.add_parser("add", parents=[file_parser], help="Add a new worker")
     add.add_argument(
-        "-n",
-        "--name",
-        action="store",
-        required=True,
-        help="The worker's name"
+        "-n", "--name", action="store", required=True, help="The worker's name"
     )
+    add.add_argument("-p", "--phone", action="store", help="The worker's post")
     add.add_argument(
-        "-p",
-        "--phone",
-        action="store",
-        help="The worker's post"
-    )
-    add.add_argument(
-        "-b",
-        "--birth",
-        action="store",
-        type=int,
-        required=True,
-        help="Birthdate"
+        "-b", "--birth", action="store", type=int, required=True, help="Birthdate"
     )
 
     # Создать субпарсер для отображения всех пользователей.
     _ = subparsers.add_parser(
-        "display",
-        parents=[file_parser],
-        help="Display all workers"
+        "display", parents=[file_parser], help="Display all workers"
     )
 
     # Создать субпарсер для выбора пользователей.
     select = subparsers.add_parser(
-        "select",
-        parents=[file_parser],
-        help="Select the workers"
+        "select", parents=[file_parser], help="Select the workers"
     )
     select.add_argument(
         "-N",
@@ -246,7 +205,7 @@ def main(command_line=None):
         action="store",
         type=int,
         required=True,
-        help="The required phone number"
+        help="The required phone number",
     )
 
     # Выполнить разбор аргументов командной строки.
